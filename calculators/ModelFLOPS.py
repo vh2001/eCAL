@@ -38,6 +38,100 @@ class CalFlopsCalculatorPT(FLOPCalculator):
                                               print_results=False)
         return {"total_flops": flops, "total_params": params}
 
+class MLPCalculator(FLOPCalculator):
+    def __init__(self, num_layers: int, din: int, dout: int, num_samples: int = 1,
+                 num_classes: int = 2):
+        self.din = din
+        self.dout = dout
+        self.L = num_layers
+        self.T = num_samples
+        self.C = num_classes
+
+    def calculate(self, model: nn.Module, input_size: Tuple) -> Dict[str, Union[int, Dict]]:
+        """
+        Calculate FLOPs and parameters for a Multilayer Perceptron
+        
+        Parameters:
+        - L: Number of layers
+        - M_l-1: Input dimension of the layer
+        - M_l: Output dimension of the layer
+        """
+        L = self.L  # Number of layers
+
+        # Total FLOPs calculation following the new formula
+        total_flops = 0
+        for l in range(0, L-1):
+
+            # FLOPs from input-output dimension computation 
+            layer_flops = 2 * (self.din * self.din) + 2 * self.din
+
+            total_flops +=  layer_flops
+
+        return {
+            'total_flops': int(total_flops),
+            'total_params': None
+        }
+    
+class CNNCalculator(FLOPCalculator):
+    def __init__(self, num_cnv_layers: int = 3, num_pool_layers: int = 3, i_r: int = 10, i_c: int = 1, 
+                 k_r: int = 3, k_c: int = 1, c_in: int = 1, s_r: int = 1, s_c: int = 1, N_f: int = 3, num_samples: int = 1,
+                 num_classes: int = 2):
+        self.num_cnv_layers = num_cnv_layers
+        self.num_pool_layers = num_pool_layers
+        self.i_r = i_r
+        self.i_c = i_c
+        self.k_r = k_r
+        self.k_c = k_c
+        self.p_r = k_r - 1
+        self.p_c = k_c
+        self.c_in = c_in
+        self.s_r = s_r
+        self.s_c = s_c
+        self.N_f = N_f
+        self.T = num_samples
+        self.C = num_classes
+
+    def calculate(self, model: nn.Module, input_size: Tuple) -> Dict[str, Union[int, Dict]]:
+        """
+        Calculate FLOPs and parameters for a Multilayer Perceptron
+        
+        Parameters:
+        - num_cnv_layers: Number of convolutional layers
+        - num_pool_layers: Number of pooling layers
+        """
+        num_cnv_layers = self.num_cnv_layers  # Number of layers
+        num_pool_layers = self.num_pool_layers  # Number of layers
+
+        # Total FLOPs calculation following the new formula
+        total_flops = 0
+        for c in range(0, num_cnv_layers-1):
+
+            # FLOPs from convolutional layers
+            output_height = (self.i_r - self.k_r + 2 * self.p_r) / self.s_r
+            output_width = (self.i_c - self.k_c + 2 * self.p_c) / self.s_c
+
+            layer_flops = output_height * output_width * (self.c_in * self.k_r * self.k_c + 1) * self.N_f
+
+            total_flops +=  layer_flops
+
+        for p in range(0, num_pool_layers-1):
+
+            # FLOPs from pooling layers
+            output_height = (self.i_r - self.k_r) / self.s_r + 1
+            output_width = (self.i_c - self.k_c) / self.s_c + 1
+
+            layer_flops = output_height * output_width * self.c_in
+
+            total_flops +=  layer_flops
+        
+        # add final layer
+        total_flops =  2 * (self.i_r * self.i_c) + 2 * self.i_r
+
+        return {
+            'total_flops': int(total_flops),
+            'total_params': None
+        }
+
 
 class KANCalculator(FLOPCalculator):
     def __init__(self, grid_size: int, num_layers: int, din: int, dout: int, k: int = 3, num_samples: int = 1,
@@ -75,12 +169,12 @@ class KANCalculator(FLOPCalculator):
 
         # Total FLOPs calculation following the new formula
         total_flops = 0
-        for l in range(0, L-1):
+        for l in range(1, L):
             # FLOPs from B-spline activation
-            b_spline_flops = M_NLF * self.din[l]
+            b_spline_flops = M_NLF * self.din
 
             # FLOPs from input-output dimension computation with B-spline transformation
-            layer_flops = (self.din[l] * self.din[l]) * M_B
+            layer_flops = (self.din * self.din) * M_B
 
             total_flops += b_spline_flops + layer_flops
 
@@ -91,8 +185,8 @@ class KANCalculator(FLOPCalculator):
 
 
 class TransformerCalculator(FLOPCalculator):
-    def __init__(self, context_length: int, embedding_size: int, num_heads: int, num_decoder_blocks: int,
-                 feed_forward_size: int, vocab_size: int):
+    def __init__(self, context_length: int, embedding_size: int, num_heads: int, 
+                 num_decoder_blocks: int, feed_forward_size: int, vocab_size: int):
         self.context_length = context_length
         self.embedding_size = embedding_size
         self.num_heads = num_heads

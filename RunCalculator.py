@@ -2,10 +2,9 @@ from calculators.Transmission import Transmission
 from calculators.DataPreprocessing import DataPreprocessing
 from calculators.Inference import Inference
 from calculators.Training import Training
-from calculators.ModelFLOPS import KANCalculator, TransformerCalculator
-import calculators.ToyModels as toy_models
+from calculators.ModelFLOPS import MLPCalculator, CNNCalculator, KANCalculator, TransformerCalculator
+#import calculators.ToyModels as toy_models
 from configs import CalculatorConfig as cfg
-
 
 
 def calculate_total_energy():
@@ -31,7 +30,29 @@ def calculate_total_energy():
         processor_max_power=cfg.DP_PROCESSOR_MAX_POWER,
         time_steps=cfg.SAMPLE_SIZE,  # only needed for GADF
     )
-    if cfg.MODEL_NAME == "KAN":
+    if cfg.MODEL_NAME == "MLP":
+        calculator = MLPCalculator(
+            num_layers=cfg.NUM_LAYERS,
+            num_classes=cfg.NUM_CLASSES,
+            din=cfg.DIN,
+            dout=cfg.DOUT,
+            num_samples=cfg.SAMPLE_SIZE  # for time series
+
+        )
+    elif cfg.MODEL_NAME == "CNN":
+        calculator = CNNCalculator(
+            num_cnv_layers=cfg.NUM_CONV_LAYERS,
+            num_pool_layers=cfg.NUM_POOL_LAYERS,
+            i_r=cfg.I_R,
+            i_c=cfg.I_C,
+            k_r=cfg.K_R,
+            k_c=cfg.K_C,
+            c_in=cfg.C_IN,
+            num_classes=cfg.NUM_CLASSES,
+            num_samples=cfg.SAMPLE_SIZE  # for time series
+
+        )
+    elif cfg.MODEL_NAME == "KAN":
         calculator = KANCalculator(
             num_layers=cfg.NUM_LAYERS,
             grid_size=cfg.GRID_SIZE,
@@ -41,7 +62,7 @@ def calculate_total_energy():
             num_samples=cfg.SAMPLE_SIZE  # for time series
 
         )
-    elif cfg.MODEL_NAME == "SimpleTransformer":
+    elif cfg.MODEL_NAME == "Transformer":
         calculator = TransformerCalculator(
             context_length=cfg.CONTEXT_LENGTH,
             embedding_size=cfg.EMBEDDING_SIZE,
@@ -54,77 +75,77 @@ def calculate_total_energy():
     else:
         calculator = None
 
-    if cfg.MODEL_NAME == "SimpleMLP":
-        model = toy_models.SimpleMLP()
-        training = Training(
-            model_name=model,
-            num_epochs=cfg.NUM_EPOCHS,
-            batch_size=cfg.BATCH_SIZE,
-            processor_flops_per_second=cfg.TR_PROCESSOR_FLOPS_PER_SECOND,
-            processor_max_power=cfg.TR_PROCESSOR_MAX_POWER,
-            num_samples=cfg.NUM_SAMPLES,
-            input_size=cfg.INPUT_SIZE,
-            evaluation_strategy=cfg.EVALUATION_STRATEGY,
-            k_folds=cfg.K_FOLDS,
-            split_ratio=cfg.SPLIT_RATIO,
-            calculator=calculator
-        )
-        inference = Inference(
-            model_name=model,
-            input_size=cfg.INPUT_SIZE,
-            num_samples=cfg.NUM_INFERENCES,
-            processor_flops_per_second=cfg.INF_PROCESSOR_FLOPS_PER_SECOND,
-            processor_max_power=cfg.INF_PROCESSOR_MAX_POWER,
-            calculator=calculator
-        )
-    elif cfg.MODEL_NAME == "SimpleCNN":
-        model = toy_models.SimpleCNN()
+    # if cfg.MODEL_NAME == "SimpleMLP":
+    #     model = toy_models.SimpleMLP()
+    #     training = Training(
+    #         model_name=model,
+    #         num_epochs=cfg.NUM_EPOCHS,
+    #         batch_size=cfg.BATCH_SIZE,
+    #         processor_flops_per_second=cfg.TR_PROCESSOR_FLOPS_PER_SECOND,
+    #         processor_max_power=cfg.TR_PROCESSOR_MAX_POWER,
+    #         num_samples=cfg.NUM_SAMPLES,
+    #         input_size=cfg.INPUT_SIZE,
+    #         evaluation_strategy=cfg.EVALUATION_STRATEGY,
+    #         k_folds=cfg.K_FOLDS,
+    #         split_ratio=cfg.SPLIT_RATIO,
+    #         calculator=calculator
+    #     )
+    #     inference = Inference(
+    #         model_name=model,
+    #         input_size=cfg.INPUT_SIZE,
+    #         num_samples=cfg.NUM_INFERENCES,
+    #         processor_flops_per_second=cfg.INF_PROCESSOR_FLOPS_PER_SECOND,
+    #         processor_max_power=cfg.INF_PROCESSOR_MAX_POWER,
+    #         calculator=calculator
+    #     )
+    # elif cfg.MODEL_NAME == "SimpleCNN":
+    #     model = toy_models.SimpleCNN()
 
-        training = Training(
-            model_name=model,
-            num_epochs=cfg.NUM_EPOCHS,
-            batch_size=cfg.BATCH_SIZE,
-            processor_flops_per_second=cfg.TR_PROCESSOR_FLOPS_PER_SECOND,
-            processor_max_power=cfg.TR_PROCESSOR_MAX_POWER,
-            num_samples=cfg.NUM_SAMPLES,
-            input_size=cfg.INPUT_SIZE,
-            evaluation_strategy=cfg.EVALUATION_STRATEGY,
-            k_folds=cfg.K_FOLDS,
-            split_ratio=cfg.SPLIT_RATIO,
-            calculator=calculator
-        )
+    #     training = Training(
+    #         model_name=model,
+    #         num_epochs=cfg.NUM_EPOCHS,
+    #         batch_size=cfg.BATCH_SIZE,
+    #         processor_flops_per_second=cfg.TR_PROCESSOR_FLOPS_PER_SECOND,
+    #         processor_max_power=cfg.TR_PROCESSOR_MAX_POWER,
+    #         num_samples=cfg.NUM_SAMPLES,
+    #         input_size=cfg.INPUT_SIZE,
+    #         evaluation_strategy=cfg.EVALUATION_STRATEGY,
+    #         k_folds=cfg.K_FOLDS,
+    #         split_ratio=cfg.SPLIT_RATIO,
+    #         calculator=calculator
+    #     )
 
-        inference = Inference(
-            model_name=model,
-            input_size=cfg.INPUT_SIZE,
-            num_samples=cfg.NUM_INFERENCES,
-            processor_flops_per_second=cfg.INF_PROCESSOR_FLOPS_PER_SECOND,
-            processor_max_power=cfg.INF_PROCESSOR_MAX_POWER,
-            calculator=calculator
-        )
-    else:
-        training = Training(
-            model_name=cfg.MODEL_NAME,
-            num_epochs=cfg.NUM_EPOCHS,
-            batch_size=cfg.BATCH_SIZE,
-            processor_flops_per_second=cfg.TR_PROCESSOR_FLOPS_PER_SECOND,
-            processor_max_power=cfg.TR_PROCESSOR_MAX_POWER,
-            num_samples=cfg.NUM_SAMPLES,
-            input_size=cfg.INPUT_SIZE,
-            evaluation_strategy=cfg.EVALUATION_STRATEGY,
-            k_folds=cfg.K_FOLDS,
-            split_ratio=cfg.SPLIT_RATIO,
-            calculator=calculator
-        )
+    #     inference = Inference(
+    #         model_name=model,
+    #         input_size=cfg.INPUT_SIZE,
+    #         num_samples=cfg.NUM_INFERENCES,
+    #         processor_flops_per_second=cfg.INF_PROCESSOR_FLOPS_PER_SECOND,
+    #         processor_max_power=cfg.INF_PROCESSOR_MAX_POWER,
+    #         calculator=calculator
+    #     )
+    # else:
+    training = Training(
+        model_name=cfg.MODEL_NAME,
+        num_epochs=cfg.NUM_EPOCHS,
+        batch_size=cfg.BATCH_SIZE,
+        processor_flops_per_second=cfg.TR_PROCESSOR_FLOPS_PER_SECOND,
+        processor_max_power=cfg.TR_PROCESSOR_MAX_POWER,
+        num_samples=cfg.NUM_SAMPLES,
+        input_size=cfg.INPUT_SIZE,
+        evaluation_strategy=cfg.EVALUATION_STRATEGY,
+        k_folds=cfg.K_FOLDS,
+        split_ratio=cfg.SPLIT_RATIO,
+        calculator=calculator
+    )
 
-        inference = Inference(
-            model_name=cfg.MODEL_NAME,
-            input_size=cfg.INPUT_SIZE,
-            num_samples=cfg.NUM_INFERENCES,
-            processor_flops_per_second=cfg.INF_PROCESSOR_FLOPS_PER_SECOND,
-            processor_max_power=cfg.INF_PROCESSOR_MAX_POWER,
-            calculator=calculator
-        )
+    inference = Inference(
+        model_name=cfg.MODEL_NAME,
+        input_size=cfg.INPUT_SIZE,
+        num_samples=cfg.NUM_INFERENCES,
+        processor_flops_per_second=cfg.INF_PROCESSOR_FLOPS_PER_SECOND,
+        processor_max_power=cfg.INF_PROCESSOR_MAX_POWER,
+        calculator=calculator
+    )
 
     # Calculate energy for each component
     transmission_calculation = transmission.calculate_energy(cfg.NUM_SAMPLES * cfg.FLOAT_PRECISION * cfg.SAMPLE_SIZE)
