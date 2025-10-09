@@ -107,5 +107,9 @@ class Training:
         return {
             "total_energy": total_energy,
             "training_energy": training_energy,
-            "evaluation_energy": evaluation_energy
+            "evaluation_energy": evaluation_energy,
+            "training_flops": training_flops,
+            "evaluation_flops": evaluation_flops,
+            "train_time": self.processor_flops_per_second / training_flops,
+            "eval_time": self.processor_flops_per_second / evaluation_flops
         }

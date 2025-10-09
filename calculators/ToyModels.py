@@ -1,8 +1,10 @@
 import torch.nn as nn
 import torch.nn.functional as F
+from efficient_kan import KAN
 
 import torch
 import numpy as np
+
 class SimpleMLP(nn.Module):
     def __init__(self, input_size=10, hidden_size=10, output_size=2, num_layers=3):
         super(SimpleMLP, self).__init__()
@@ -71,9 +73,6 @@ class SimpleCNN(nn.Module):
         return self.output(x)
     
 
-
-
-
 class SimpleMLP_practical(nn.Module):
     def __init__(self, input_size=10, hidden_size=10, output_size=2, num_layers=3):
         super(SimpleMLP_practical, self).__init__()
@@ -100,19 +99,19 @@ class SimpleCNN_practical(nn.Module):
     """
     A simple 1D Convolutional Neural Network (CNN) for sequence or feature vector regression.
     """
-    def __init__(self, output_size=2, hidden_channels=16, num_layers=3):
+    def __init__(self, input_size=10, output_size=2, hidden_channels=16, num_layers=3):
         super(SimpleCNN_practical, self).__init__()
         self.layers = nn.ModuleList()
         # Input data is expected to be reshaped to have 1 channel.
         current_channels = 1  
         
         # Create convolutional blocks with increasing channel depth
-        for i in range(num_layers):
-            out_channels = hidden_channels * (2**i) # e.g., 16 -> 32 -> 64
+        for i in range(1, num_layers):
+            out_channels = hidden_channels * (2 ** i)
             conv_block = nn.Sequential(
                 nn.Conv1d(current_channels, out_channels, kernel_size=3, padding=1),
-                nn.BatchNorm1d(out_channels),
-                nn.ReLU()
+                #nn.BatchNorm1d(out_channels),
+                #nn.ReLU()
             )
             self.layers.append(conv_block)
             current_channels = out_channels
@@ -123,45 +122,32 @@ class SimpleCNN_practical(nn.Module):
     
     def forward(self, x):
 
-        if x.dim() == 2:
-            x = x.unsqueeze(1)  # Add channel dimension if missing
+        #if x.dim() == 2:
+        #    x = x.unsqueeze(1)  # Add channel dimension if missing
         # Expected input x shape: (batch_size, 1, num_features)
         for layer in self.layers:
             x = layer(x)
-        x = self.global_pool(x)
-        x = x.view(x.size(0), -1) # Flatten the output for the linear layer
-        return self.output_layer(x)
+        #x = self.global_pool(x)
+        #x = x.view(x.size(0), -1) # Flatten the output for the linear layer
+        return x #self.output_layer(x)
+    
+
 # --- Simplified KAN-like Model (Modified to vary sub-layers) ---
-# This model applies an MLP with `num_hidden_layers_per_feature_fn` hidden layers
-# to each input feature and sums the results.
 class KANLikeRegressor(nn.Module):
-    def __init__(self, input_dim, num_hidden_layers_per_feature_fn, nodes_per_layer_in_sub_fn):
+    def __init__(self, num_layers: int, grid_size: int = 10, din: int = 10, dout: int = 2, k: int = 3):
         super(KANLikeRegressor, self).__init__()
-        self.input_dim = input_dim
-        self.feature_functions = nn.ModuleList()
+        self.input_dim = din
 
-        for _ in range(input_dim):
-            layers_list = []
-            current_in_features = 1 # Each feature function takes 1 input initially
+        architecture = [din] + [din] * (num_layers) + [dout]
 
-            for i in range(num_hidden_layers_per_feature_fn):
-                layers_list.append(nn.Linear(current_in_features, nodes_per_layer_in_sub_fn))
-                layers_list.append(nn.ReLU())
-                current_in_features = nodes_per_layer_in_sub_fn # For subsequent hidden layers
-
-            # Final output layer for the feature function
-            layers_list.append(nn.Linear(current_in_features, 1))
-            self.feature_functions.append(nn.Sequential(*layers_list))
+        self.kan = KAN(architecture, grid_size=grid_size, 
+                        spline_order=3)
 
     def forward(self, x):
-        # x shape: (batch_size, input_dim)
-        outputs = []
-        for i in range(self.input_dim):
-            # Pass each feature through its own sub-network
-            output = self.feature_functions[i](x[:, i].unsqueeze(1)) # (batch_size, 1)
-            outputs.append(output)
-        # Sum the outputs of all feature functions
-        return torch.sum(torch.cat(outputs, dim=1), dim=1, keepdim=True)
+        # Simpler forward pass that processes all layers sequentially
+        for layer in self.kan.layers:
+            x = layer(x)
+        return x
 
 
 #############################TRANSFORMER MODEL FROM SCRATCH#############################

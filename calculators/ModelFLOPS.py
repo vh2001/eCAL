@@ -60,7 +60,7 @@ class MLPCalculator(FLOPCalculator):
 
         # Total FLOPs calculation following the new formula
         total_flops = 0
-        for l in range(0, L-1):
+        for l in range(0, L - 1):
 
             # FLOPs from input-output dimension computation 
             layer_flops = 2 * (self.din * self.din) + 2 * self.din
@@ -73,7 +73,7 @@ class MLPCalculator(FLOPCalculator):
         }
     
 class CNNCalculator(FLOPCalculator):
-    def __init__(self, num_cnv_layers: int = 3, num_pool_layers: int = 3, i_r: int = 10, i_c: int = 1, 
+    def __init__(self, num_cnv_layers: int = 3, num_pool_layers: int = 1, i_r: int = 10, i_c: int = 1, 
                  k_r: int = 3, k_c: int = 1, c_in: int = 1, s_r: int = 1, s_c: int = 1, N_f: int = 3, num_samples: int = 1,
                  num_classes: int = 2):
         self.num_cnv_layers = num_cnv_layers
@@ -102,30 +102,39 @@ class CNNCalculator(FLOPCalculator):
         num_cnv_layers = self.num_cnv_layers  # Number of layers
         num_pool_layers = self.num_pool_layers  # Number of layers
 
+        input_height = self.i_r
+        input_width = self.i_c
+
+        output_height = 0
+        output_width = 0
         # Total FLOPs calculation following the new formula
         total_flops = 0
-        for c in range(0, num_cnv_layers-1):
+        for c in range(0, num_cnv_layers - 1):
 
             # FLOPs from convolutional layers
-            output_height = (self.i_r - self.k_r + 2 * self.p_r) / self.s_r
-            output_width = (self.i_c - self.k_c + 2 * self.p_c) / self.s_c
+            output_height = (input_height - self.k_r + 2 * self.p_r) / self.s_r + 1
+            output_width = (input_width - self.k_c + 2 * self.p_c) / self.s_c + 1
+
+            # Create convolutional blocks with increasing channel depth
+            input_height = self.i_r * (2 ** c)
+            input_width = self.i_c * (2 ** c)
 
             layer_flops = output_height * output_width * (self.c_in * self.k_r * self.k_c + 1) * self.N_f
 
             total_flops +=  layer_flops
 
-        for p in range(0, num_pool_layers-1):
+        for p in range(0, num_pool_layers):
 
             # FLOPs from pooling layers
-            output_height = (self.i_r - self.k_r) / self.s_r + 1
-            output_width = (self.i_c - self.k_c) / self.s_c + 1
+            output_height = (input_height - self.k_r + 2 * self.p_r) / self.s_r + 1
+            output_width = (input_width - self.k_c + 2 * self.p_c) / self.s_c + 1
 
             layer_flops = output_height * output_width * self.c_in
 
             total_flops +=  layer_flops
         
         # add final layer
-        total_flops =  2 * (self.i_r * self.i_c) + 2 * self.i_r
+        total_flops +=  2 * (output_height * output_width) + 2 * output_height
 
         return {
             'total_flops': int(total_flops),
@@ -134,7 +143,7 @@ class CNNCalculator(FLOPCalculator):
 
 
 class KANCalculator(FLOPCalculator):
-    def __init__(self, grid_size: int, num_layers: int, din: int, dout: int, k: int = 3, num_samples: int = 1,
+    def __init__(self, num_layers: int, grid_size: int, din: int, dout: int, k: int = 3, num_samples: int = 1,
                  num_classes: int = 2):
         self.G = grid_size
         self.din = din
