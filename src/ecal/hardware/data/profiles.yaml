@@ -1,0 +1,44 @@
+apple_m2:
+  name: "Apple M2"
+  flops_per_second_fp32: 3.6e12
+  flops_per_second_fp16: 7.2e12
+  tdp_watts: 22
+  gpu_power_watts: 15
+  idle_power_watts: 3
+  device: "mps"
+
+nvidia_a100_80gb:
+  name: "NVIDIA A100 80GB"
+  flops_per_second_fp32: 19.5e12
+  flops_per_second_fp16: 312e12
+  tdp_watts: 300
+  gpu_power_watts: 250
+  idle_power_watts: 50
+  device: "cuda"
+
+nvidia_h100_sxm:
+  name: "NVIDIA H100 SXM"
+  flops_per_second_fp32: 67e12
+  flops_per_second_fp16: 990e12
+  tdp_watts: 700
+  gpu_power_watts: 600
+  idle_power_watts: 100
+  device: "cuda"
+
+generic_cpu:
+  name: "Generic CPU"
+  flops_per_second_fp32: 1e12
+  flops_per_second_fp16: 1e12
+  tdp_watts: 100
+  gpu_power_watts: 100
+  idle_power_watts: 20
+  device: "cpu"
+
+generic_edge:
+  name: "Generic Edge Device"
+  flops_per_second_fp32: 1e10
+  flops_per_second_fp16: 2e10
+  tdp_watts: 15
+  gpu_power_watts: 10
+  idle_power_watts: 2
+  device: "cpu"
