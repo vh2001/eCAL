@@ -20,7 +20,7 @@ used to convert FLOP estimates into energy. They are managed by
 | Profile            | FP32 FLOPS   | TDP (W) | Device |
 |--------------------|-------------|---------|--------|
 | `apple_m2`         | 3.6 TFLOPS  | 22      | mps    |
-| `nvidia_a100_80gb` | 19.5 TFLOPS | 300     | cuda   |
+| `nvidia_a100_80gb` | 19.5 TFLOPS | 400     | cuda   |
 | `nvidia_h100_sxm`  | 67 TFLOPS   | 700     | cuda   |
 | `generic_cpu`      | 1 TFLOPS    | 100     | cpu    |
 | `generic_edge`     | 0.01 TFLOPS | 15      | cpu    |

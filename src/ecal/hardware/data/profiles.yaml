@@ -10,8 +10,8 @@ apple_m2:
 nvidia_a100_80gb:
   name: "NVIDIA A100 80GB"
   flops_per_second_fp32: 19.5e12
-  flops_per_second_fp16: 312e12
-  tdp_watts: 300
+  flops_per_second_fp16: 77.97e12
+  tdp_watts: 400
   gpu_power_watts: 250
   idle_power_watts: 50
   device: "cuda"
@@ -19,7 +19,7 @@ nvidia_a100_80gb:
 nvidia_h100_sxm:
   name: "NVIDIA H100 SXM"
   flops_per_second_fp32: 67e12
-  flops_per_second_fp16: 990e12
+  flops_per_second_fp16: 267.7e12
   tdp_watts: 700
   gpu_power_watts: 600
   idle_power_watts: 100
