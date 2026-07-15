@@ -57,6 +57,7 @@ ecal = "ecal.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/cfortuna/eCAL"
+Documentation = "https://vh2001.github.io/eCAL/"
 Paper = "https://ieeexplore.ieee.org/abstract/document/11298182"
 
 [tool.setuptools.packages.find]

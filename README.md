@@ -6,6 +6,8 @@ eCAL computes the total energy consumed across the full AI model lifecycle — d
 
 Published in **IEEE Journal on Selected Areas in Communications (JSAC), 2026**.
 
+[Documentation](https://vh2001.github.io/eCAL/)
+
 ## Installation
 
 ### From source (recommended for development)
