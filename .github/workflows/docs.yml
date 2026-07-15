@@ -2,7 +2,7 @@ name: docs
 
 on:
   push:
-    branches: [main]
+    branches: [main, polish-ecal-package]
   pull_request:
   workflow_dispatch:
 
@@ -32,7 +32,7 @@ jobs:
           path: docs/_build/html
 
   deploy:
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/polish-ecal-package'))
     needs: build
     runs-on: ubuntu-latest
     permissions:
