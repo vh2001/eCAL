@@ -7,7 +7,19 @@ import yaml
 
 @dataclass
 class HardwareProfile:
-    """Hardware profile for energy estimation."""
+    """Hardware profile for energy estimation.
+
+    Args:
+        name: Human-readable device name (e.g. "NVIDIA H100 SXM").
+        flops_per_second_fp32: Peak throughput in FLOPS at FP32 precision.
+        flops_per_second_fp16: Peak throughput in FLOPS at FP16 precision.
+        tdp_watts: Thermal design power in watts; used as the processor's
+            power draw when converting FLOP-derived time into energy.
+        gpu_power_watts: GPU power draw in watts under load (0 for CPU-only
+            profiles).
+        idle_power_watts: Idle power draw in watts.
+        device: Backend device identifier (e.g. "cpu", "cuda", "mps").
+    """
     name: str
     flops_per_second_fp32: float
     flops_per_second_fp16: float

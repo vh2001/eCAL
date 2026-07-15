@@ -1,4 +1,4 @@
-from typing import Dict, Union, Tuple, Optional
+from typing import Tuple, Optional
 from ecal.calculators.model_flops import FLOPCalculator, FlopsCalculatorFactory
 from torchvision.models import resnet18
 
@@ -36,11 +36,13 @@ class Inference:
         self.processor_flops_per_second = processor_flops_per_second
         self.processor_max_power = processor_max_power
 
-    def calculate_flops(self) -> Dict[str, Union[int, Dict]]:
+    def calculate_flops(self) -> float:
         """
+        Calculate total FLOPs for the current inference workload
 
         Returns:
-            Total FLOPs for the current inference
+            Total FLOPs across num_samples inference calls (a single forward
+            pass's FLOPs multiplied by num_samples)
         """
         forward_flops = self.calculator.calculate(self.model, self.input_size)['total_flops']
         total_flops = forward_flops * self.num_samples

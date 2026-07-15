@@ -53,11 +53,11 @@ def estimate(
     Args:
         model_type: Model architecture ("MLP", "CNN", "KAN", "Transformer")
         model_params: Architecture-specific parameters. Keys depend on model_type:
-            - MLP: num_layers, din, dout
-            - CNN: num_cnv_layers, num_pool_layers, i_r, i_c, k_r, k_c, c_in
-            - KAN: num_layers, grid_size, din, dout
-            - Transformer: context_length, embedding_size, num_heads,
-                          num_decoder_blocks, feed_forward_size, vocab_size
+            MLP needs num_layers, din, dout; CNN needs num_cnv_layers,
+            num_pool_layers, i_r, i_c, k_r, k_c, c_in; KAN needs num_layers,
+            grid_size, din, dout; Transformer needs context_length,
+            embedding_size, num_heads, num_decoder_blocks, feed_forward_size,
+            vocab_size.
         num_samples: Number of training samples
         sample_size: Size of each sample (e.g., number of features)
         num_epochs: Number of training epochs
@@ -78,7 +78,11 @@ def estimate(
         virtualization_overhead: Energy overhead fraction [0, 1]
 
     Returns:
-        Dictionary with energy breakdown (Joules) and eCAL metric (J/bit)
+        Dictionary with energy breakdown (Joules) and eCAL metric (J/bit).
+        Keys: "transmission", "preprocessing", "training", "evaluation",
+        "inference", "inference_process", "total" (all in Joules),
+        "ecal_j_per_bit" (J/bit), and bit counts "Ed bits", "inf_proc_bits",
+        "total_bits".
     """
     if model_params is None:
         model_params = {}

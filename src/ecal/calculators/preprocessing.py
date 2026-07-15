@@ -1,3 +1,5 @@
+from typing import Dict
+
 from ecal.calculators.preprocessing_flops import (
     NormalizationCalculator,
     MinMaxScalingCalculator,
@@ -15,6 +17,13 @@ class DataPreprocessing:
 
         Args:
             preprocessing_type: Type of preprocessing to perform
+                ("normalization", "min_max_scaling", or "GADF").
+            processor_flops_per_second: Processor throughput in FLOPS, used to
+                convert FLOP counts into elapsed time for energy estimation.
+            processor_max_power: Processor power draw in watts, used to convert
+                elapsed time into energy.
+            time_steps: Number of time steps per sample (only relevant for the
+                "GADF" preprocessing type).
         """
         self.calculators = {
             'normalization': NormalizationCalculator(),
@@ -48,7 +57,19 @@ class DataPreprocessing:
 
         return self.calculator.calculate_flops(data_bits)
 
-    def calculate_energy(self, data_bits: int, time_steps: int) -> float:
+    def calculate_energy(self, data_bits: int, time_steps: int) -> Dict[str, float]:
+        """
+        Calculate the energy usage of the current preprocessing step
+
+        Args:
+            data_bits: Number of scalar data points per sample
+            time_steps: Number of time steps per sample (only used when
+                preprocessing_type is "GADF")
+
+        Returns:
+            Dictionary with "total_energy" (Joules) and "total_bits"
+            (data_bits * time_steps, the total number of scalar values processed)
+        """
         # Calculate the total number of flops
         if self.preprocessing_type == 'GADF':
             calc_dict = self.calculate_flops(data_bits, time_steps)

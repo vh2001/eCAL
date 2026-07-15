@@ -8,6 +8,16 @@ from ecal._version import __version__
 
 
 def main(argv=None):
+    """Entry point for the ``ecal`` console script.
+
+    Parses command-line arguments and dispatches to the ``estimate`` or
+    ``profiles`` subcommand. With no subcommand, prints help and exits with
+    status 1.
+
+    Args:
+        argv: Argument list to parse instead of ``sys.argv[1:]``. Primarily
+            useful for testing.
+    """
     parser = argparse.ArgumentParser(
         prog="ecal",
         description="eCAL: Estimate the energy cost of the AI lifecycle (J/bit)",
@@ -65,6 +75,15 @@ def main(argv=None):
 
 
 def _run_estimate(args):
+    """Build model parameters from parsed CLI args and print an energy estimate.
+
+    Translates the flat argparse namespace into the ``model_params`` dict
+    expected by :func:`ecal.api.estimate`, calls it, and prints the result
+    either as human-readable text or JSON (if ``--json`` was passed).
+
+    Args:
+        args: Parsed arguments from the ``estimate`` subparser.
+    """
     from ecal.api import estimate
 
     model_params = {}
@@ -121,6 +140,7 @@ def _run_estimate(args):
 
 
 def _run_profiles():
+    """Print all available hardware profiles as a formatted table."""
     from ecal.hardware.profiles import list_profiles
 
     profiles = list_profiles()

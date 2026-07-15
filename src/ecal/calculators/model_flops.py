@@ -1,3 +1,7 @@
+"""FLOP calculators for supported model architectures (MLP, CNN, KAN, Transformer)
+and thin wrappers around the third-party ``calflops`` library for arbitrary
+PyTorch/HuggingFace models."""
+
 from abc import ABC, abstractmethod
 from typing import Dict, Union, Tuple
 
@@ -6,8 +10,25 @@ from torch import nn
 
 
 class FlopsCalculatorFactory:
+    """Factory that selects a :class:`FLOPCalculator` implementation based on
+    whether the model is a HuggingFace model name (str) or a ``torch.nn.Module``.
+    """
+
     @staticmethod
     def create_calculator(model: Union[nn.Module, str]) -> 'FLOPCalculator':
+        """Create a FLOP calculator appropriate for the given model.
+
+        Args:
+            model: A HuggingFace model name (str) or an instantiated
+                ``torch.nn.Module``.
+
+        Returns:
+            FLOPCalculator: A ``CalFlopsCalculatorHF`` for string model names,
+            or a ``CalFlopsCalculatorPT`` for ``nn.Module`` instances.
+
+        Raises:
+            ValueError: If ``model`` is neither a string nor an ``nn.Module``.
+        """
         if isinstance(model, str):
             return CalFlopsCalculatorHF()
         elif isinstance(model, nn.Module):
@@ -17,20 +38,60 @@ class FlopsCalculatorFactory:
 
 
 class FLOPCalculator(ABC):
+    """Abstract base class for FLOP calculators.
+
+    Subclasses implement :meth:`calculate` to estimate the floating-point
+    operations required for a single forward pass of a model.
+    """
+
     @abstractmethod
     def calculate(self, model: Union[nn.Module, str], input_size: Tuple) -> Dict[str, Union[int, Dict]]:
+        """Calculate FLOPs (and, where available, parameter count) for a model.
+
+        Args:
+            model: The model to analyze (``nn.Module`` or HuggingFace model
+                name, depending on the concrete implementation).
+            input_size: Shape of a single input sample, e.g. ``(1, sample_size)``.
+
+        Returns:
+            Dict[str, Union[int, Dict]]: At minimum a ``"total_flops"`` key;
+            implementations may also include ``"total_params"`` and a
+            ``"breakdown"`` of FLOPs by component.
+        """
         pass
 
 
 class CalFlopsCalculatorHF(FLOPCalculator):
+    """FLOP calculator for HuggingFace models, backed by ``calflops.calculate_flops_hf``."""
+
     def calculate(self, model: str, input_size: Tuple) -> Dict[str, Union[int, Dict]]:
+        """Calculate FLOPs for a HuggingFace model by name.
+
+        Args:
+            model: HuggingFace model identifier (e.g. ``"bert-base-uncased"``).
+            input_size: Input shape passed to ``calculate_flops_hf``.
+
+        Returns:
+            Dict[str, Union[int, Dict]]: ``"total_flops"`` and ``"total_params"``.
+        """
         flops, macs, params = calculate_flops_hf(model_name=model, input_shape=input_size, print_results=False,
                                                  output_as_string=False)
         return {"total_flops": flops, "total_params": params}
 
 
 class CalFlopsCalculatorPT(FLOPCalculator):
+    """FLOP calculator for PyTorch ``nn.Module`` models, backed by ``calflops.calculate_flops``."""
+
     def calculate(self, model: nn.Module, input_size: Tuple) -> Dict[str, Union[int, Dict]]:
+        """Calculate FLOPs for a PyTorch model.
+
+        Args:
+            model: A ``torch.nn.Module`` instance.
+            input_size: Input shape passed to ``calculate_flops``.
+
+        Returns:
+            Dict[str, Union[int, Dict]]: ``"total_flops"`` and ``"total_params"``.
+        """
         flops, macs, params = calculate_flops(model=model,
                                               input_shape=input_size,
                                               output_as_string=False,
@@ -39,8 +100,19 @@ class CalFlopsCalculatorPT(FLOPCalculator):
         return {"total_flops": flops, "total_params": params}
 
 class MLPCalculator(FLOPCalculator):
+    """Analytical FLOP calculator for a Multilayer Perceptron (MLP)."""
+
     def __init__(self, num_layers: int, din: int, dout: int, num_samples: int = 1,
                  num_classes: int = 2):
+        """Initialize the MLP calculator.
+
+        Args:
+            num_layers: Number of layers ``L`` in the network.
+            din: Input dimension of the network.
+            dout: Output dimension of the network.
+            num_samples: Number of samples the FLOP count will later be scaled by.
+            num_classes: Number of output classes.
+        """
         self.din = din
         self.dout = dout
         self.L = num_layers
@@ -48,13 +120,20 @@ class MLPCalculator(FLOPCalculator):
         self.C = num_classes
 
     def calculate(self, model: nn.Module, input_size: Tuple) -> Dict[str, Union[int, Dict]]:
-        """
-        Calculate FLOPs and parameters for a Multilayer Perceptron
+        """Calculate FLOPs and parameters for a Multilayer Perceptron.
 
-        Parameters:
-        - L: Number of layers
-        - M_l-1: Input dimension of the layer
-        - M_l: Output dimension of the layer
+        Args:
+            model: Unused; present to satisfy the :class:`FLOPCalculator` interface.
+            input_size: Unused; present to satisfy the :class:`FLOPCalculator` interface.
+
+        Notes:
+            L: Number of layers.
+            M_l-1: Input dimension of the layer.
+            M_l: Output dimension of the layer.
+
+        Returns:
+            Dict[str, Union[int, Dict]]: ``"total_flops"`` (int) and
+            ``"total_params"`` (``None``, not computed by this calculator).
         """
         L = self.L  # Number of layers
 
@@ -73,9 +152,27 @@ class MLPCalculator(FLOPCalculator):
         }
 
 class CNNCalculator(FLOPCalculator):
+    """Analytical FLOP calculator for a Convolutional Neural Network (CNN)."""
+
     def __init__(self, num_cnv_layers: int = 3, num_pool_layers: int = 1, i_r: int = 10, i_c: int = 1,
                  k_r: int = 3, k_c: int = 1, c_in: int = 1, s_r: int = 1, s_c: int = 1, N_f: int = 3, num_samples: int = 1,
                  num_classes: int = 2):
+        """Initialize the CNN calculator.
+
+        Args:
+            num_cnv_layers: Number of convolutional layers.
+            num_pool_layers: Number of pooling layers.
+            i_r: Input height.
+            i_c: Input width.
+            k_r: Kernel height.
+            k_c: Kernel width.
+            c_in: Number of input channels.
+            s_r: Stride along height.
+            s_c: Stride along width.
+            N_f: Number of filters.
+            num_samples: Number of samples the FLOP count will later be scaled by.
+            num_classes: Number of output classes.
+        """
         self.num_cnv_layers = num_cnv_layers
         self.num_pool_layers = num_pool_layers
         self.i_r = i_r
@@ -92,12 +189,19 @@ class CNNCalculator(FLOPCalculator):
         self.C = num_classes
 
     def calculate(self, model: nn.Module, input_size: Tuple) -> Dict[str, Union[int, Dict]]:
-        """
-        Calculate FLOPs and parameters for a Multilayer Perceptron
+        """Calculate FLOPs and parameters for a Convolutional Neural Network.
 
-        Parameters:
-        - num_cnv_layers: Number of convolutional layers
-        - num_pool_layers: Number of pooling layers
+        Args:
+            model: Unused; present to satisfy the :class:`FLOPCalculator` interface.
+            input_size: Unused; present to satisfy the :class:`FLOPCalculator` interface.
+
+        Notes:
+            num_cnv_layers: Number of convolutional layers.
+            num_pool_layers: Number of pooling layers.
+
+        Returns:
+            Dict[str, Union[int, Dict]]: ``"total_flops"`` (int) and
+            ``"total_params"`` (``None``, not computed by this calculator).
         """
         num_cnv_layers = self.num_cnv_layers  # Number of layers
         num_pool_layers = self.num_pool_layers  # Number of layers
@@ -143,8 +247,21 @@ class CNNCalculator(FLOPCalculator):
 
 
 class KANCalculator(FLOPCalculator):
+    """Analytical FLOP calculator for a Kolmogorov-Arnold Network (KAN)."""
+
     def __init__(self, num_layers: int, grid_size: int, din: int, dout: int, k: int = 3, num_samples: int = 1,
                  num_classes: int = 2):
+        """Initialize the KAN calculator.
+
+        Args:
+            num_layers: Number of layers ``L``.
+            grid_size: B-spline grid size ``G``.
+            din: Input dimension of the network.
+            dout: Output dimension of the network.
+            k: B-spline degree (default 3).
+            num_samples: Number of samples the FLOP count will later be scaled by.
+            num_classes: Number of output classes.
+        """
         self.G = grid_size
         self.din = din
         self.dout = dout
@@ -154,16 +271,23 @@ class KANCalculator(FLOPCalculator):
         self.C = num_classes
 
     def calculate(self, model: nn.Module, input_size: Tuple) -> Dict[str, Union[int, Dict]]:
-        """
-        Calculate FLOPs and parameters for a Kolmogorov-Arnold Network (KAN)
+        """Calculate FLOPs and parameters for a Kolmogorov-Arnold Network (KAN).
 
-        Parameters:
-        - K: B-spline degree (typically 3)
-        - G: Grid size
-        - L: Number of layers
-        - M_l-1: Input dimension of the layer
-        - M_l: Output dimension of the layer
-        - M_NLF: FLOPs for non-linear function (B-spline activation)
+        Args:
+            model: Unused; present to satisfy the :class:`FLOPCalculator` interface.
+            input_size: Unused; present to satisfy the :class:`FLOPCalculator` interface.
+
+        Notes:
+            K: B-spline degree (typically 3).
+            G: Grid size.
+            L: Number of layers.
+            M_l-1: Input dimension of the layer.
+            M_l: Output dimension of the layer.
+            M_NLF: FLOPs for the non-linear function (B-spline activation).
+
+        Returns:
+            Dict[str, Union[int, Dict]]: ``"total_flops"`` (int) and
+            ``"total_params"`` (``None``, not computed by this calculator).
         """
         K = self.k  # B-spline degree
         G = self.G  # Grid size
@@ -194,8 +318,20 @@ class KANCalculator(FLOPCalculator):
 
 
 class TransformerCalculator(FLOPCalculator):
+    """Analytical FLOP calculator for a decoder-only Transformer model."""
+
     def __init__(self, context_length: int, embedding_size: int, num_heads: int,
                  num_decoder_blocks: int, feed_forward_size: int, vocab_size: int):
+        """Initialize the Transformer calculator.
+
+        Args:
+            context_length: Sequence/context length ``C``.
+            embedding_size: Embedding dimension ``N_embed``.
+            num_heads: Number of attention heads ``N_head``.
+            num_decoder_blocks: Number of decoder blocks ``N_decoder_blocks``.
+            feed_forward_size: Feed-forward layer width ``FFS``.
+            vocab_size: Vocabulary size.
+        """
         self.context_length = context_length
         self.embedding_size = embedding_size
         self.num_heads = num_heads
@@ -204,15 +340,25 @@ class TransformerCalculator(FLOPCalculator):
         self.vocab_size = vocab_size
 
     def calculate(self, model: nn.Module, input_size: Tuple) -> Dict[str, Union[int, Dict]]:
-        """
-        Calculate FLOPs for a Transformer model.
+        """Calculate FLOPs for a Transformer model.
 
-        Parameters:
-        - C: Context length
-        - N_embed: Embedding size
-        - N_head: Number of attention heads
-        - N_decoder_blocks: Number of decoder blocks
-        - FFS: Feed forward size
+        Args:
+            model: Unused; present to satisfy the :class:`FLOPCalculator` interface.
+            input_size: Unused; present to satisfy the :class:`FLOPCalculator` interface.
+
+        Notes:
+            C: Context length.
+            N_embed: Embedding size.
+            N_head: Number of attention heads.
+            N_decoder_blocks: Number of decoder blocks.
+            FFS: Feed forward size.
+
+        Returns:
+            Dict[str, Union[int, Dict]]: ``"total_flops"`` (int), ``"total_params"``
+            (``None``), and a ``"breakdown"`` dict with per-component attention
+            FLOPs (``kqv_embedding_flops``, ``attention_score_flops``,
+            ``reduce_flops``, ``projection_flops``, ``total_attention_flops``),
+            ``mlp_blocks_flops``, and ``per_block_flops``.
         """
         # Model parameters
         C = self.context_length

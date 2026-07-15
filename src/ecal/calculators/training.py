@@ -1,4 +1,4 @@
-from typing import Dict, Union, Tuple, Optional
+from typing import Dict, Tuple, Optional
 
 from torchvision.models import resnet18
 
@@ -58,8 +58,18 @@ class Training:
         self.processor_flops_per_second = processor_flops_per_second
         self.processor_max_power = processor_max_power
 
-    def calculate_flops_training(self) -> Dict[str, Union[int, Dict]]:
+    def calculate_flops_training(self) -> float:
+        """
+        Calculate total FLOPs required for training
 
+        Approximates one training pass (forward + backward + weight update)
+        as three times the forward-pass FLOPs, then scales by the number of
+        training samples (per the configured evaluation strategy) and the
+        number of epochs.
+
+        Returns:
+            Total training FLOPs across all epochs
+        """
         forward_flops = self.calculator.calculate(self.model, self.input_size)['total_flops']
         # 1 training pass takes roughly 3x a single forward pass
         training_flops = forward_flops * 3
@@ -78,6 +88,16 @@ class Training:
         return total_flops
 
     def calculate_flops_evaluation(self) -> float:
+        """
+        Calculate total FLOPs required for evaluation
+
+        Scales a single forward pass's FLOPs by the number of samples held
+        out for evaluation, based on the configured evaluation strategy
+        (train/test split or k-fold cross-validation).
+
+        Returns:
+            Total evaluation FLOPs
+        """
         # Calculate the total number of flops
         forward_flops = self.calculator.calculate(self.model, self.input_size)['total_flops']
         if self.evaluation_strategy == 'train_test_split':
@@ -92,7 +112,15 @@ class Training:
         total_flops = forward_flops * evaluation_samples
         return total_flops
 
-    def calculate_energy(self) -> float:
+    def calculate_energy(self) -> Dict[str, float]:
+        """
+        Calculate the total energy usage of training and evaluation
+
+        Returns:
+            Dictionary with "total_energy" (training + evaluation, in Joules),
+            "training_energy", "evaluation_energy", "training_flops",
+            "evaluation_flops", "train_time" (seconds), and "eval_time" (seconds)
+        """
         # Calculate the total number of flops
         training_flops = self.calculate_flops_training()
         evaluation_flops = self.calculate_flops_evaluation()

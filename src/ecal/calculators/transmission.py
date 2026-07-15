@@ -27,10 +27,28 @@ class Transmission:
                  physical: str = 'WIFI_PHY',
                  failure_rate: float = 0.0):
         """
-        Initialize calculator with specific protocols for each layer
+        Initialize calculator with specific protocols for each OSI layer
 
         Args:
+            application: Application-layer protocol name (key into
+                APPLICATION_PROTOCOLS, e.g. "HTTP", "FTP")
+            presentation: Presentation-layer protocol name (key into
+                PRESENTATION_PROTOCOLS, e.g. "TLS", "SSL")
+            session: Session-layer protocol name (key into SESSION_PROTOCOLS,
+                e.g. "RPC")
+            transport: Transport-layer protocol name (key into
+                TRANSPORT_PROTOCOLS, e.g. "TCP", "UDP")
+            network: Network-layer protocol name (key into NETWORK_PROTOCOLS,
+                e.g. "IPv4", "IPv6")
+            datalink: Data-link-layer protocol name (key into
+                DATALINK_PROTOCOLS, e.g. "ETHERNET", "WIFI_MAC")
+            physical: Physical-layer protocol name (key into
+                PHYSICAL_PROTOCOLS, e.g. "WIFI_PHY", "BLUETOOTH")
             failure_rate: Probability of transmission failure (0.0 to 1.0)
+
+        Raises:
+            KeyError: If a protocol name is not found in its layer's dictionary
+            ValueError: If failure_rate is not between 0 and 1
         """
         self.protocols = {
             'application': APPLICATION_PROTOCOLS[application],
@@ -46,7 +64,18 @@ class Transmission:
         self.failure_rate = failure_rate
 
     def calculate_layer_energy(self, protocol: LayerProtocol, input_bits: int) -> Dict[str, Union[float, int]]:
-        """Calculate energy consumption for a single layer"""
+        """Calculate energy consumption for a single OSI layer
+
+        Args:
+            protocol: The protocol configuration for this layer
+            input_bits: Number of bits arriving at this layer from the layer above
+
+        Returns:
+            Dictionary with "total_bits" (bits after adding this layer's
+            data/control-plane overhead), "total_energy" (Joules), and a
+            "breakdown" of the four energy terms (sender, receiver, IoT-node,
+            and gateway contributions)
+        """
 
         # Calculate overhead bits
         data_plane_bits = int(input_bits * protocol.data_plane_overhead)
@@ -73,7 +102,19 @@ class Transmission:
         }
 
     def calculate_energy(self, data_bits: int) -> Dict[str, Union[float, Dict]]:
-        """Calculate energy consumption with retransmission consideration"""
+        """Calculate energy consumption with retransmission consideration
+
+        Args:
+            data_bits: Number of bits to transmit before protocol overhead
+
+        Returns:
+            Dictionary with "total_energy" and "total_bits" scaled by the
+            expected number of transmissions (accounting for failure_rate via
+            a geometric-distribution expectation), "original_bits",
+            "expected_transmissions", "failure_rate", "single_transmission"
+            (the un-scaled result), and "layer_breakdown" (per-OSI-layer
+            energy detail)
+        """
         base_result = self._calculate_single_transmission(data_bits)
 
         # Calculate expected number of transmissions using geometric distribution

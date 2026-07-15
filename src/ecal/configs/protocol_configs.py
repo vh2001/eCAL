@@ -1,14 +1,42 @@
+"""OSI-layer protocol energy parameters used by
+:class:`ecal.calculators.transmission.Transmission` to estimate the energy
+cost of sending data across a network stack.
+
+Each OSI layer (application, presentation, session, transport, network,
+data link, physical) has a dictionary mapping protocol name to a
+:class:`LayerProtocol` describing that protocol's overhead and per-bit
+energy cost.
+"""
+
 from dataclasses import dataclass
 
 
 @dataclass
 class LayerProtocol:
-    """Protocol metrics for a single layer"""
-    name: str  # Protocol name
-    data_plane_overhead: float  # Data plane overhead ratio
-    control_plane_overhead: float  # Control plane overhead ratio
-    base_energy_per_bit_sender: float  # Energy consumption per bit sender
-    base_energy_per_bit_receiver: float  # Energy consumption per bit
+    """Protocol metrics for a single layer.
+
+    Args:
+        name: Protocol name (e.g. "HTTP", "TCP", "IPv4").
+        data_plane_overhead: Data-plane overhead ratio — fraction of extra
+            bits added on top of the payload for framing/formatting at this
+            layer.
+        control_plane_overhead: Control-plane overhead ratio — fraction of
+            extra bits added for control messages/handshakes at this layer.
+        base_energy_per_bit_sender: Energy consumed per bit by the sender
+            (Joules/bit).
+        base_energy_per_bit_receiver: Energy consumed per bit by the
+            receiver (Joules/bit).
+        Niot: Number of IoT nodes contributing to this layer's energy draw.
+        Piot: Power draw per IoT node (watts).
+        Ngateway: Number of gateway nodes contributing to this layer's
+            energy draw.
+        Pgateway: Power draw per gateway node (watts).
+    """
+    name: str
+    data_plane_overhead: float
+    control_plane_overhead: float
+    base_energy_per_bit_sender: float
+    base_energy_per_bit_receiver: float
     Niot: int
     Piot: float
     Ngateway: int
