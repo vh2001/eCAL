@@ -26,10 +26,18 @@ jobs:
       - name: Build Sphinx docs
         run: sphinx-build -b html -W --keep-going docs docs/_build/html
 
-      - name: Upload docs artifact
+      - name: Assemble combined site (website at /, docs at /docs/)
+        run: |
+          rm -rf site
+          mkdir -p site
+          cp -r website/. site/
+          mkdir -p site/docs
+          cp -r docs/_build/html/. site/docs/
+
+      - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/_build/html
+          path: site
 
   deploy:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/polish-ecal-package'))

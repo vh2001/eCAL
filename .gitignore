@@ -78,6 +78,9 @@ instance/
 docs/_build/
 docs/api/generated/
 
+# Combined GitHub Pages assembly (website + docs)
+/site/
+
 # PyBuilder
 .pybuilder/
 target/

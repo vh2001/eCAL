@@ -57,7 +57,7 @@ ecal = "ecal.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/sensorlab/eCAL"
-Documentation = "https://vh2001.github.io/eCAL/"
+Documentation = "https://sensorlab.github.io/eCAL/docs/"
 Paper = "https://ieeexplore.ieee.org/abstract/document/11298182"
 
 [tool.setuptools.packages.find]

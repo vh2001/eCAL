@@ -6,14 +6,14 @@ eCAL computes the total energy consumed across the full AI model lifecycle — d
 
 Published in **IEEE Journal on Selected Areas in Communications (JSAC), 2026**.
 
-[Documentation](https://vh2001.github.io/eCAL/)
+[Documentation](https://sensorlab.github.io/eCAL/docs/)
 
 ## Installation
 
 ### From source (recommended for development)
 
 ```bash
-git clone https://github.com/cfortuna/eCAL.git
+git clone https://github.com/sensorlab/eCAL.git
 cd eCAL
 pip install -e ".[dev]"
 ```

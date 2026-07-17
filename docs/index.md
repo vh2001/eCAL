@@ -23,7 +23,7 @@ api/index
 
 ## License
 
-BSD 3-Clause License. See [LICENSE](https://github.com/cfortuna/eCAL/blob/main/LICENSE).
+BSD 3-Clause License. See [LICENSE](https://github.com/sensorlab/eCAL/blob/main/LICENSE).
 
 For contributing/development setup (running tests, linting, type checking),
-see the [project README](https://github.com/cfortuna/eCAL#development).
+see the [project README](https://github.com/sensorlab/eCAL#development).
