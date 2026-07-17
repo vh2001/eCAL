@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68.0", "setuptools-scm>=8.0"]
+requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,7 +10,7 @@ readme = "README.md"
 license = "BSD-3-Clause"
 requires-python = ">=3.9"
 authors = [
-    {name = "SensorLab"},
+    {name = "SensorLab", email = "sensorlab.jsi@gmail.com"},
 ]
 keywords = ["energy", "AI", "lifecycle", "sustainability", "eCAL"]
 classifiers = [
@@ -56,7 +56,8 @@ docs = [
 ecal = "ecal.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/cfortuna/eCAL"
+Homepage = "https://github.com/sensorlab/eCAL"
+Documentation = "https://vh2001.github.io/eCAL/"
 Paper = "https://ieeexplore.ieee.org/abstract/document/11298182"
 
 [tool.setuptools.packages.find]
