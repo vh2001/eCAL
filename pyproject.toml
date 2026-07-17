@@ -1,0 +1,84 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ecal-energy"
+version = "0.1.0"
+description = "Analytical estimation of the energy cost of the AI lifecycle (J/bit)"
+readme = "README.md"
+license = "BSD-3-Clause"
+requires-python = ">=3.9"
+authors = [
+    {name = "SensorLab", email = "sensorlab.jsi@gmail.com"},
+]
+keywords = ["energy", "AI", "lifecycle", "sustainability", "eCAL"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "torch>=2.0",
+    "torchvision>=0.15",
+    "calflops>=0.3",
+    "transformers>=4.30",
+    "numpy>=1.24",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+full = [
+    "pandas",
+    "matplotlib",
+    "scikit-learn",
+    "codecarbon",
+    "efficient-kan",
+]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.4",
+    "mypy>=1.0",
+]
+docs = [
+    "sphinx>=7.0",
+    "furo>=2024.1.29",
+    "myst-parser>=2.0",
+    "sphinx-autobuild>=2024.4.16",
+]
+
+[project.scripts]
+ecal = "ecal.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/sensorlab/eCAL"
+Documentation = "https://sensorlab.github.io/eCAL/docs/"
+Paper = "https://ieeexplore.ieee.org/abstract/document/11298182"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"ecal.hardware" = ["data/*.yaml"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true

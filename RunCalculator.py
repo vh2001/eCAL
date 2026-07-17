@@ -3,7 +3,6 @@ from calculators.DataPreprocessing import DataPreprocessing
 from calculators.Inference import Inference
 from calculators.Training import Training
 from calculators.ModelFLOPS import MLPCalculator, CNNCalculator, KANCalculator, TransformerCalculator
-#import calculators.ToyModels as toy_models
 from configs import CalculatorConfig as cfg
 
 
@@ -75,55 +74,6 @@ def calculate_total_energy():
     else:
         calculator = None
 
-    # if cfg.MODEL_NAME == "SimpleMLP":
-    #     model = toy_models.SimpleMLP()
-    #     training = Training(
-    #         model_name=model,
-    #         num_epochs=cfg.NUM_EPOCHS,
-    #         batch_size=cfg.BATCH_SIZE,
-    #         processor_flops_per_second=cfg.TR_PROCESSOR_FLOPS_PER_SECOND,
-    #         processor_max_power=cfg.TR_PROCESSOR_MAX_POWER,
-    #         num_samples=cfg.NUM_SAMPLES,
-    #         input_size=cfg.INPUT_SIZE,
-    #         evaluation_strategy=cfg.EVALUATION_STRATEGY,
-    #         k_folds=cfg.K_FOLDS,
-    #         split_ratio=cfg.SPLIT_RATIO,
-    #         calculator=calculator
-    #     )
-    #     inference = Inference(
-    #         model_name=model,
-    #         input_size=cfg.INPUT_SIZE,
-    #         num_samples=cfg.NUM_INFERENCES,
-    #         processor_flops_per_second=cfg.INF_PROCESSOR_FLOPS_PER_SECOND,
-    #         processor_max_power=cfg.INF_PROCESSOR_MAX_POWER,
-    #         calculator=calculator
-    #     )
-    # elif cfg.MODEL_NAME == "SimpleCNN":
-    #     model = toy_models.SimpleCNN()
-
-    #     training = Training(
-    #         model_name=model,
-    #         num_epochs=cfg.NUM_EPOCHS,
-    #         batch_size=cfg.BATCH_SIZE,
-    #         processor_flops_per_second=cfg.TR_PROCESSOR_FLOPS_PER_SECOND,
-    #         processor_max_power=cfg.TR_PROCESSOR_MAX_POWER,
-    #         num_samples=cfg.NUM_SAMPLES,
-    #         input_size=cfg.INPUT_SIZE,
-    #         evaluation_strategy=cfg.EVALUATION_STRATEGY,
-    #         k_folds=cfg.K_FOLDS,
-    #         split_ratio=cfg.SPLIT_RATIO,
-    #         calculator=calculator
-    #     )
-
-    #     inference = Inference(
-    #         model_name=model,
-    #         input_size=cfg.INPUT_SIZE,
-    #         num_samples=cfg.NUM_INFERENCES,
-    #         processor_flops_per_second=cfg.INF_PROCESSOR_FLOPS_PER_SECOND,
-    #         processor_max_power=cfg.INF_PROCESSOR_MAX_POWER,
-    #         calculator=calculator
-    #     )
-    # else:
     training = Training(
         model_name=cfg.MODEL_NAME,
         num_epochs=cfg.NUM_EPOCHS,

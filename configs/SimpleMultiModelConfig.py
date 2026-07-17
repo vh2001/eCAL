@@ -37,7 +37,7 @@ SPLIT_RATIO = 0.8  # Only used if EVALUATION_STRATEGY is train_test_split
 
 #CNN specific parameters
 NUM_CONV_LAYERS = 3
-NUM_POOl_LAYERS = 3
+NUM_POOL_LAYERS = 3
 I_R = 10 
 I_C = 1 
 K_R = 3 

@@ -1,3 +1,9 @@
+# macOS
+.DS_Store
+
+# Paper PDF (large binary)
+paper.pdf
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -70,6 +76,10 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/api/generated/
+
+# Combined GitHub Pages assembly (website + docs)
+/site/
 
 # PyBuilder
 .pybuilder/

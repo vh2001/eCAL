@@ -106,25 +106,7 @@ def theoretical_energy_proportionality(utilization, P_idle, P_peak):
     return power_consumption
 
 
-class SimpleMLP(nn.Module):
-    def __init__(self, input_size=10, hidden_size=10, output_size=2, num_layers=3):
-        super(SimpleMLP, self).__init__()
-        self.layers = nn.ModuleList()
-        # Input layer
-        self.layers.append(nn.Linear(input_size, hidden_size))
-        self.layers.append(nn.ReLU())
-        # Hidden layers
-        for _ in range(num_layers - 2): # Adjusted loop for clarity
-            self.layers.append(nn.Linear(hidden_size, hidden_size))
-            self.layers.append(nn.ReLU())
-        # Output layer - Add it to the list!
-        self.layers.append(nn.Linear(hidden_size, output_size))
-
-    def forward(self, x):
-        # Simpler forward pass that processes all layers sequentially
-        for layer in self.layers:
-            x = layer(x)
-        return x
+from calculators.ToyModels import SimpleMLP_practical as SimpleMLP  # noqa: E402
 
 
 # --- CNN Model (Modified to vary dense layers) ---
